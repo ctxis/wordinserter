@@ -282,7 +282,10 @@ class Format(Operation):
         "border",
         "display",
         "padding",
-        "line_height"
+        "line_height",
+        "position",
+        "top",
+        "left",
     }
 
     FORMAT_ALIASES = {

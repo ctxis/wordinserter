@@ -246,29 +246,39 @@ class COMRenderer(BaseRenderer):
     def image(self, op: Image):
         location, height, width = op.get_image_path_and_dimensions()
 
-        rng = self.selection
+        with self.get_range() as rng:
+            if op.format.position == 'absolute':
+                shapes = self.document.Shapes
+            else:
+                shapes = rng.InlineShapes
 
-        try:
-            image = rng.InlineShapes.AddPicture(FileName=location, SaveWithDocument=True)
-        except Exception:
-            location, height, width = op.get_404_image_and_dimensions()
-            image = rng.InlineShapes.AddPicture(FileName=location, SaveWithDocument=True)
+            try:
+                image = shapes.AddPicture(FileName=location, SaveWithDocument=True)
+            except Exception:
+                location, height, width = op.get_404_image_and_dimensions()
+                image = shapes.AddPicture(FileName=location, SaveWithDocument=True)
 
-        if height:
-            image.Height = height * 0.75
+            if height:
+                image.Height = height * 0.75
 
-        if width:
-            image.Width = width * 0.75
+            if width:
+                image.Width = width * 0.75
 
-        if op.caption:
-            self.selection.TypeParagraph()
-            self.selection.Range.Style = self.document.Styles("caption")
-            self.selection.TypeText(op.caption)
+            if op.format.left:
+                image.Left = WordFormatter.size_to_points(op.format.left)
 
-        op.render.image = image
+            if op.format.top:
+                image.Top = WordFormatter.size_to_points(op.format.top)
 
-        if not isinstance(op.parent, TableCell):
-            self.selection.TypeParagraph()
+            if op.caption:
+                self.selection.TypeParagraph()
+                self.selection.Range.Style = self.document.Styles("caption")
+                self.selection.TypeText(op.caption)
+
+            op.render.image = image
+
+            if not isinstance(op.parent, TableCell):
+                self.selection.TypeParagraph()
 
     @renders(HyperLink)
     def hyperlink(self, op: HyperLink):
